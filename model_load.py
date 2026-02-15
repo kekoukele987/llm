@@ -59,24 +59,23 @@ knowledge_base = [
 # 预生成知识库向量
 kb_embeddings = get_text_embedding(knowledge_base)
 
-# 定义问答函数
-def rag_qa(question):
-    """基于语义相似度的问答"""
-    # 生成问题向量
+
+def rag_qa_with_score(question, threshold=0.7):
     q_embedding = get_text_embedding(question)
-    
-    # 计算余弦相似度
     similarity_scores = torch.matmul(q_embedding, kb_embeddings.T)
     
-    # 找最匹配的答案
-    best_idx = torch.argmax(similarity_scores).item()
-    best_text = knowledge_base[best_idx]
+    # 把分数打印出来！（最关键）
+    print("相似度分数（和3条知识库）：", similarity_scores)
     
-    # 提取答案
-    if "？" in best_text:
-        answer = best_text.split("？")[1].strip()
-    else:
-        answer = best_text
+    best_score = similarity_scores.max().item()
+    best_idx = torch.argmax(similarity_scores).item()
+
+    # 低于阈值 → 拒绝回答
+    if best_score < threshold:
+        return f"[不知道] 最高分只有 {best_score:.2f}"
+    
+    best_text = knowledge_base[best_idx]
+    answer = best_text.split("？")[1].strip()
     return answer
 
 # 第六步：测试效果
@@ -84,9 +83,11 @@ print("\n=== BAAI/bge-small-zh 问答效果 ===")
 questions = [
     "大模型是啥？",
     "微调需要几条数据？",
-    "GPT2有啥特点？"
+    "GPT2有啥特点？",
+    "今天晚上吃什么？"
 ]
 
 for q in questions:
     print(f"问题：{q}")
-    print(f"答案：{rag_qa(q)}\n")
+    print(f"答案：{rag_qa_with_score(q)}\n")
+
