@@ -1,18 +1,14 @@
-# 普通列表（低效）
-import torch
+from functools import reduce
 
+# 定义管道函数：接收函数列表和初始值，自动串联执行
+def pipe(functions, initial_value):
+    return reduce(lambda x, f: f(x), functions, initial_value)
 
-a = [[1,2], [3,4]]
-b = [[5,6], [7,8]]
-# 手写矩阵乘法（麻烦）
-result = [[a[0][0]*b[0][0]+a[0][1]*b[1][0], a[0][0]*b[0][1]+a[0][1]*b[1][1]],
-          [a[1][0]*b[0][0]+a[1][1]*b[1][0], a[1][0]*b[0][1]+a[1][1]*b[1][1]]]
+# 定义步骤函数
+def add1(x): return x + 1
+def mul2(x): return x * 2
+def sub3(x): return x - 3
 
-# 张量（高效）
-a_tensor = torch.tensor(a)
-b_tensor = torch.tensor(b)
-result_tensor = torch.matmul(a_tensor, b_tensor)  # 一行搞定
-print(result_tensor)
-# 输出：
-# tensor([[19, 22],
-#         [43, 50]])
+# 管道式执行：1 +1 → 2 ×2 →4 -3 →1
+result = pipe([add1, mul2, sub3], 1)
+print(result)  # 输出：1
